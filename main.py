@@ -11,8 +11,9 @@ import shap
 import matplotlib.pyplot as plt
 
 
-from typing import Tuple, Any
+from typing import Tuple, Any, Literal
 from models.base_model import BaseModel
+from models.model_factory import create_model
 
 # ▼ペアレントディレクトリの定義
 BASE_DIR = str(Path(os.path.abspath('')))
@@ -91,3 +92,75 @@ def shap_summary_plot(run_name: str, models: list[BaseModel], X: pd.DataFrame):
     plt.savefig(file_path, bbox_inches='tight')
     plt.close()
 
+
+class JLeagueAttendanceModel:
+    def __init__(
+            self,
+            run_name: str,
+            model_naeme : Literal["lightgbm", "xgboost"],
+            param: dict[str, Any],
+            target: pd.DataFrame,
+            n_splits : int = 5,
+    ):
+        self.run_name = run_name
+        self.model_name = model_naeme
+        self.params = param
+        self.target = target
+        self.n_plits = n_splits
+
+        self.models = []
+        self.valid_score = []
+        self.y_test_pred = None
+        self.log_dir = f"{BASE_DIR}/{run_name}"
+
+        if not os.path.isdir(self.log_dir):
+            os.mkdir(self.log_dir)
+
+        # ファイルハンドラの設定
+        file_handler = logging.FileHandler(self.log_dir + "/general.log")
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+
+    def train(
+            self,
+            train_data: pd.DataFrame
+    ):
+        X = train_data
+        y = self.target
+
+        kf = KFold(n_splits=self.n_plits, shuffle=True, random_state=777)
+
+        for fold, (tr_idx, va_idx) in enumerate(kf.split(X, y)):
+            X_tr, X_va = X.iloc[tr_idx], X.iloc[va_idx]
+            y_tr, y_va = y.iloc[tr_idx], y.iloc[va_idx]
+
+            model = create_model(
+                model_name=self.model_name,
+                params=self.params
+            )
+            model.train(X_tr, y_tr)
+
+            y_va_pred = model.predict(X_va)
+            score = np.sqrt(mean_squared_error(y_va, y_va_pred))
+
+            self.models.append(model)
+            self.valid_score.append(model)
+
+            logger.info(f"{self.run_name} - Fold {fold+1}/{self.n_splits} - score {score:.2f}")
+
+        shap_summary_plot(
+            run_name=self.run_name,
+            models=self.models,
+            X=X
+        )
+        logger.info(f"{self.run_name} - end training cv - score {np.mean(self.valid_scores):.2f}")
+
+        save_run_info(
+            run_name=self.run_name,
+            model_name=self.model_name,
+            features=X.columns,
+            params=self.params
+        )
+
+        
