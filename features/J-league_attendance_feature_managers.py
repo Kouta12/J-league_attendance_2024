@@ -5,7 +5,9 @@ import csv
 import time
 from pathlib import Path
 from contextlib import contextmanager
+
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
 # ▼ペアレントディレクトリの定義
 BASE_DIR = str(Path(os.path.abspath('')))
@@ -244,7 +246,7 @@ class HolidayFlag(FeatureBase):
         return train_feature, test_feature
     
 class VenueLabel(FeatureBase):
-    def create_feature(self, train_data: pd.DataFrame, test_data: pd.DataFrame) -> Tuple[pd.DataFrame]:
+    def generate_feature(self, train_data: pd.DataFrame, test_data: pd.DataFrame):
         train_feature, test_feature = pd.DataFrame(), pd.DataFrame()
 
         sorted_venue_df = pd.read_csv("../function_data/sorted_venue.csv")
@@ -381,6 +383,37 @@ class VenueLabel(FeatureBase):
             }
         )  
         return (train_feature, test_feature)
+    
+class Temperature(FeatureBase):
+    def generate_feature(self, train_data: pd.DataFrame, test_data: pd.DataFrame):
+        train_feature, test_feature = pd.DataFrame(), pd.DataFrame()
+
+        train_feature["Temperature"] = train_data["temperature"]
+        test_feature["Temperature"] = test_data["temperature"]
+
+        create_memo(
+            col_name="Temperature",
+            description="気温（加工なし）",
+            data_type="float64",
+        )
+        return (train_feature, test_feature)
+    
+class StandardizedTemperature(FeatureBase):
+    def generate_feature(self, train_data: pd.DataFrame, test_data: pd.DataFrame):
+        train_feature, test_feature = pd.DataFrame(), pd.DataFrame()
+
+        sc = StandardScaler()
+        sc.fit(train_data["temperature"])
+        train_feature["StandardizedTemperature"] = sc.transform(train_data["temperature"])
+        test_feature["StandardizedTemperature"] = sc.transform(test_data["temperature"])
+
+        create_memo(
+            col_name="StandardizedTemperature",
+            description="標準化された気温",
+            data_type="float64"
+        )
+        return (train_feature, test_feature)
+
     
 if __name__=="__main__":
     data_dir = BASE_DIR + "/features/feature_data"

@@ -11,3 +11,4 @@ function_data/
 submit_data/
 
 # .ipynbファイルはいらない
+.ipynb
