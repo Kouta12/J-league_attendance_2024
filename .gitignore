@@ -9,6 +9,7 @@ function_data/
 
 # 提出ファイルディレクトリは無視
 submit_data/
+notebook/
 
 # .ipynbファイルはいらない
 *.ipynb
