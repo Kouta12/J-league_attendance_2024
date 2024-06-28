@@ -1,0 +1,76 @@
+{
+    "Records": [
+        {
+            "column": 0
+            ,"name": "id"
+            ,"data-type": "int"
+           ,"description": "対戦カードID"
+        }
+        ,{
+            "column": 1,
+            "name": "match_date",
+            "data-type": "varchar",
+            "description": "開催日"
+        }
+        ,{
+            "column": 2,
+            "name": "kick_off_time",
+            "data-type": "varchar",
+            "description": "キックオフ時刻"
+        }
+        ,{
+            "column": 3,
+            "name": "section",
+            "data-type": "varchar",
+            "description": "開催節"
+        }
+        ,{
+            "column": 4
+            ,"name": "round"
+            ,"data-type": "varchar"
+            ,"description": "開催区分"
+        }
+        ,{
+            "column": 5
+            ,"name": "home_team"
+            ,"data-type": "varchar"
+            ,"description": "ホームチーム"
+        }
+        ,{
+            "column": 6
+            ,"name": "away_team"
+            ,"data-type": "varchar"
+            ,"description": "アウェイチーム"
+        }
+        ,{
+            "column": 7
+            ,"name": "venue"
+            ,"data-type": "varchar"
+            ,"description": "会場"
+        }
+        ,{
+            "column": 8
+            ,"name": "weather"
+            ,"data-type": "varchar"
+            ,"description": "天気"
+        }
+        ,{
+            "column": 9
+            ,"name": "temperature"
+            ,"data-type": "varchar"
+            ,"description": "気温"
+        }
+        ,{
+            "column": 10
+            ,"name": "humidity"
+            ,"data-type": "int"
+            ,"description": "湿度"
+        }
+        ,{
+            "column": 11
+            ,"name": "brodcasters"
+            ,"data-type": "varchar"
+            ,"description": "TV放送"
+        }
+    ]
+}

@@ -1,0 +1,20 @@
+{
+    "MatchDay": {
+        "description": "試合日",
+        "data_type": "datetime64[ns]",
+        "possible_values": null
+    },
+    "KickoffTime": {
+        "description": "キックオフの時間を整数にした",
+        "data_type": "int64",
+        "possible_values": null
+    },
+    "HolidayFlag": {
+        "description": "休日のフラグ",
+        "data_type": "int64",
+        "possible_values": {
+            "0": "平日",
+            "1": "休日"
+        }
+    }
+}

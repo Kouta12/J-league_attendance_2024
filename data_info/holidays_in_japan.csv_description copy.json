@@ -1,0 +1,16 @@
+{
+    "Records": [
+        {
+            "column": 0
+            ,"name": "holiday_date"
+            ,"data-type": "varchar"
+            ,"description": "日付"
+        }
+        ,{
+            "column": 1
+            ,"name": "description"
+            ,"data-type": "varchar"
+            ,"description": "祝日"
+        }
+    ]
+}

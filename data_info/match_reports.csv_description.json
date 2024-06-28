@@ -1,0 +1,154 @@
+{
+    "Records": [
+        {
+            "column": 0
+            ,"name": "id"
+            ,"data-type": "int"
+            ,"description": "対戦カードID"
+        }
+        ,{
+            "column": 1
+            ,"name": "home_team_player11"
+            ,"data-type": "varchar"
+            ,"description": "ホームチーム先発メンバー11"
+        }
+        ,{
+            "column": 2
+            ,"name": "home_team_player10"
+            ,"data-type": "varchar"
+            ,"description": "ホームチーム先発メンバー10"
+        }
+        ,{
+            "column": 3
+            ,"name": "home_team_player9"
+            ,"data-type": "varchar"
+            ,"description": "ホームチーム先発メンバー9"
+        }
+        ,{
+            "column": 4
+            ,"name": "home_team_player8"
+            ,"data-type": "varchar"
+            ,"description": "ホームチーム先発メンバー8"
+        }
+        ,{
+            "column": 5
+            ,"name": "home_team_player7"
+            ,"data-type": "varchar"
+            ,"description": "ホームチーム先発メンバー7"
+        }
+        ,{
+            "column": 6
+            ,"name": "home_team_player6"
+            ,"data-type": "varchar"
+            ,"description": "ホームチーム先発メンバー6"
+        }
+        ,{
+            "column": 7
+            ,"name": "home_team_player5"
+            ,"data-type": "varchar"
+            ,"description": "ホームチーム先発メンバー5"
+        }
+        ,{
+            "column": 8
+            ,"name": "home_team_player4"
+            ,"data-type": "varchar"
+            ,"description": "ホームチーム先発メンバー4"
+        }
+        ,{
+            "column": 9
+            ,"name": "home_team_player3"
+            ,"data-type": "varchar"
+            ,"description": "ホームチーム先発メンバー3"
+        }
+        ,{
+            "column": 10
+            ,"name": "home_team_player2"
+            ,"data-type": "varchar"
+            ,"description": "ホームチーム先発メンバー2"
+        }
+        ,{
+            "column": 11
+            ,"name": "home_team_player1"
+            ,"data-type": "varchar"
+            ,"description": "ホームチーム先発メンバー1"
+        }
+        ,{
+            "column": 12
+            ,"name": "home_team_score"
+            ,"data-type": "int"
+            ,"description": "ホームチームスコア"
+        }
+        ,{
+            "column": 13
+            ,"name": "away_team_score"
+            ,"data-type": "int"
+            ,"description": "アウェイチームスコア"
+        }
+        ,{
+            "column": 14
+            ,"name": "away_team_player1"
+            ,"data-type": "varchar"
+            ,"description": "アウェイチーム先発メンバー1"
+        }
+        ,{
+            "column": 15
+            ,"name": "away_team_player2"
+            ,"data-type": "varchar"
+            ,"description": "アウェイチーム先発メンバー2"
+        }
+        ,{
+            "column": 16
+            ,"name": "away_team_player3"
+            ,"data-type": "varchar"
+            ,"description": "アウェイチーム先発メンバー3"
+        }
+        ,{
+            "column": 17
+            ,"name": "away_team_player4"
+            ,"data-type": "varchar"
+            ,"description": "アウェイチーム先発メンバー4"
+        }
+        ,{
+            "column": 18
+            ,"name": "away_team_player5"
+            ,"data-type": "varchar"
+            ,"description": "アウェイチーム先発メンバー5"
+        }
+        ,{
+            "column": 19
+            ,"name": "away_team_player6"
+            ,"data-type": "varchar"
+            ,"description": "アウェイチーム先発メンバー6"
+        }
+        ,{
+            "column": 20
+            ,"name": "away_team_player7"
+            ,"data-type": "varchar"
+            ,"description": "アウェイチーム先発メンバー7"
+        }
+        ,{
+            "column": 21
+            ,"name": "away_team_player8"
+            ,"data-type": "varchar"
+            ,"description": "アウェイチーム先発メンバー8"
+        }
+        ,{
+            "column": 22
+            ,"name": "away_team_player9"
+            ,"data-type": "varchar"
+            ,"description": "アウェイチーム先発メンバー9"
+        }
+        ,{
+            "column": 23
+            ,"name": "away_team_player10"
+            ,"data-type": "varchar"
+            ,"description": "アウェイチーム先発メンバー10"
+        }
+        ,{
+            "column": 24
+            ,"name": "away_team_player11"
+            ,"data-type": "varchar"
+            ,"description": "アウェイチーム先発メンバー11"
+        }
+    ]
+}

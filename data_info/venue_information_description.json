@@ -1,0 +1,22 @@
+{
+    "Records": [
+        {
+            "column": 0
+            ,"name": "venue"
+            ,"data-type": "varchar"
+            ,"description": "会場"
+        }
+        ,{
+            "column": 1
+            ,"name": "capacity"
+            ,"data-type": "int"
+            ,"description": "収容人数"
+        }
+        ,{
+            "column": 2
+            ,"name": "addres"
+            ,"data-type": "varchar"
+            ,"description": "所在地"
+        }
+    ]
+}

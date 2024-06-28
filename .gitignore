@@ -1,0 +1,12 @@
+# featherファイルのディレクトリは無視
+feature_data/
+
+# 元データファイルは無視
+data/
+
+# 加工データファイルは無視
+function_data/
+
+# 提出ファイルディレクトリは無視
+submit_data/
+
