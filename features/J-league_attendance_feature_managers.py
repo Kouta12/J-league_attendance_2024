@@ -380,6 +380,7 @@ class JLeagueAttendance:
             train_data: pd.DataFrame,
             test_data: pd.DataFrame,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        
         for feature_class in feature_classes:
             feature_instance = feature_class(self.data_dir)
             train_feature, test_feature = feature_instance.create_feature(
@@ -407,6 +408,11 @@ class JLeagueAttendance:
         train_feature = pd.DataFrame()
         test_feature = pd.DataFrame()
 
+        """
+        --------------------------------------------------------
+        ▼                  特徴量の追加 ここから                   ▼
+        --------------------------------------------------------
+        """
         # 個々の特徴量クラスのインスタンスを作成し、特徴量を生成
         feature_classes = [
             MatchDay, 
@@ -416,6 +422,11 @@ class JLeagueAttendance:
             Temperature,
             StandardizedTemperature,
         ]
+        """
+        --------------------------------------------------------
+        ▲                  特徴量の追加 ここまで                   ▲
+        --------------------------------------------------------
+        """
         
         train_features, test_features = self.create_and_concat_features(
             train_feature,
