@@ -13,13 +13,14 @@ import matplotlib.pyplot as plt
 import optuna
 from optuna.trial import Trial
 
-from typing import Tuple, Any, Literal, Dict
+from typing import Tuple, Any, Literal, Dict, List
 from numpy import ndarray
 from models.base_model import BaseModel
 
 from models.model_factory import create_model
-from utils.plotting import plot_learning_curve
-from features.Jleague_attendance_feature_managers import JLeagueAttendance
+from utils.plotting import plot_learning_curve, plot_learning_curve_ensemble
+from utils.shap_plot import shap_summary_plot, shap_summary_plot_ensemble
+
 
 # ▼ペアレントディレクトリの定義
 BASE_DIR = str(Path(os.path.abspath('')))
@@ -77,30 +78,6 @@ def save_run_info(
         json.dump(info_data, f, indent=4, ensure_ascii=False)
 
 
-def shap_summary_plot(run_name: str, model: BaseModel, X: pd.DataFrame) -> None:
-    # 単一のモデルを使ってSHAP値を計算
-    explainer = shap.Explainer(model)
-    shap_values = explainer(X)
-
-    # 特徴量の重要度を計算
-    importance_df = pd.DataFrame(list(zip(X.columns, np.abs(shap_values.values).mean(0))), 
-                                 columns=['feature', 'importance'])
-    importance_df = importance_df.sort_values('importance', ascending=False)
-
-    # shap.Explanationオブジェクトを作成
-    shap_exp = shap.Explanation(values=importance_df['importance'].values, 
-                                base_values=None, 
-                                data=importance_df['feature'].values, 
-                                feature_names=importance_df['feature'].values)
-
-    # 特徴量の重要度のバーグラフを作成
-    fig, ax = plt.subplots(figsize=(10, len(importance_df) * 0.4))
-    shap.plots.bar(shap_exp, show=False)
-
-    # プロットを保存
-    file_path = os.path.join(BASE_DIR, f"logs/{run_name}/{run_name}_shap_importance.png")
-    plt.savefig(file_path, bbox_inches='tight')
-    plt.close()
 
 
 class JLeagueAttendanceModel:
@@ -112,12 +89,13 @@ class JLeagueAttendanceModel:
     ):
         self.run_name = run_name
         self.model_name = model_naeme
-        self.n_plits = n_splits
+        self.n_splits = n_splits
+        self.optuna_params = None
 
         self.model = None
-        self.models = []
+        self.models: List[BaseModel] = []
         self.y_test_pred = None
-        self.log_dir = f"{BASE_DIR}/{run_name}"
+        self.log_dir = f"{BASE_DIR}/logs/{run_name}"
 
         # ログファイル自動生成
         if not os.path.isdir(self.log_dir):
@@ -129,17 +107,16 @@ class JLeagueAttendanceModel:
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
-
-    def objective(
+    def train(
             self,
-            trial: Trial,
             X: pd.DataFrame,
             y: pd.DataFrame,
             params: Dict[str, Any],
-    ) -> float:
+    ) -> None:
 
-        kf = KFold(n_splits=self.n_plits, shuffle=True, random_state=777)
+        kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=777)
 
+        evaluation_results_list = []
         valid_scores = []
         for fold, (tr_idx, va_idx) in enumerate(kf.split(X, y)):
             X_tr, X_va = X.iloc[tr_idx], X.iloc[va_idx]
@@ -147,15 +124,17 @@ class JLeagueAttendanceModel:
 
             model = create_model(
                 model_name=self.model_name,
-                params=self.params
+                params=params
             )
-            model.train(X_tr, y_tr)
+            model.train(X_tr, y_tr, X_va=X_va, y_va=y_va)
 
             y_va_pred = model.predict(X_va)
             valid_score = np.sqrt(mean_squared_error(y_va, y_va_pred))
 
             self.models.append(model)
             valid_scores.append(valid_score)
+            evaluation_results_list.append(model.evaluation_results)
+
 
             logger.info(f"{self.run_name} - Fold {fold+1}/{self.n_splits} - score {valid_score:.2f}")
 
@@ -165,28 +144,97 @@ class JLeagueAttendanceModel:
         save_run_info(
             run_name=self.run_name,
             model_name=self.model_name,
-            features=X.columns,
+            features=X.columns.to_list(),
             # ベストパラメータにしたい
             params=params
         )
 
-        return np.mean(valid_score)
+        # shap_summary_plot_ensemble(
+        #     run_name=run_name,
+        #     BASE_DIR=BASE_DIR,
+        #     models=self.models,
+        #     X=X
+        # )
 
+        plot_learning_curve_ensemble(
+            run_name=run_name,
+            BASE_DIR=BASE_DIR,
+            eval_results_list=evaluation_results_list,
+        )
+
+
+
+
+
+    def cross_validate(self, X: pd.DataFrame, y: pd.DataFrame, params: Dict[str, Any]) -> float:
+        kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=777)
+
+        valid_scores = []
+        for fold, (tr_idx, va_idx) in enumerate(kf.split(X, y)):
+            X_tr, X_va = X.iloc[tr_idx], X.iloc[va_idx]
+            y_tr, y_va = y.iloc[tr_idx], y.iloc[va_idx]
+
+            model = create_model(
+                model_name=self.model_name,
+                params=params
+            )
+            model.train(X_tr, y_tr, X_va, y_va)
+
+            y_va_pred = model.predict(X_va)
+            valid_score = np.sqrt(mean_squared_error(y_va, y_va_pred))
+
+            valid_scores.append(valid_score)
+
+            logger.info(f"{self.run_name} - Fold {fold+1}/{self.n_splits} - score {valid_score:.2f}")
+
+        mean_score = np.mean(valid_scores)
+        logger.info(f"{self.run_name} - end training cv - score {mean_score:.2f}")
+
+        return mean_score
+    
+    def objective(
+            self,
+            trial: Trial,
+            X: pd.DataFrame,
+            y: pd.DataFrame,
+            params: Dict[str, Any],
+    ) -> List[BaseModel]:
+        current_params = params.copy()
+        for param_name, param_range in self.optuna_params.items():
+            if param_name in ["num_leaves", "n_estimators"]:
+                current_params[param_name] = trial.suggest_int(param_name, param_range[0], param_range[1])
+            elif param_name == "learning_rate":
+                current_params[param_name] = trial.suggest_loguniform(param_name, param_range[0], param_range[1])
+            else:
+                current_params[param_name] = trial.suggest_uniform(param_name, param_range[0], param_range[1])
+
+        mean_score = self.cross_validate(X, y, current_params)
+
+        save_run_info(
+            run_name=self.run_name,
+            model_name=self.model_name,
+            features=X.columns.tolist(),
+            params=current_params
+        )
+
+        return mean_score
+    
     def optimize_hyperparameters(
             self,
             X: pd.DataFrame,
             y: pd.DataFrame,
             params: Dict[str, Any],
-            n_trials : int = 100, 
+            optuna_params: Dict[str, Tuple[float, float]],
+            n_trials: int = 100,
     ) -> Dict[str, Any]:
+        self.optuna_params = optuna_params
         
-        study = optuna.create_study(direction="minimize") 
-        study.optimize(
-            lambda trial: self.objective(trial, X, y, params=params), 
-            n_trials=n_trials
-        )
-        return study.best_params
-    
+        study = optuna.create_study(direction="minimize")
+        study.optimize(lambda trial: self.objective(trial, X, y, params), n_trials=n_trials)
+        
+        best_params = {**params, **study.best_params}
+        return best_params
+        
 
     def train_final_model(
             self, 
@@ -202,7 +250,7 @@ class JLeagueAttendanceModel:
         # トレーニングデータとバリデーションデータに分割
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=777)
 
-        iterations, train_scores, val_scores = model.train_with_callback(X_train, y_train, X_val, y_val)
+        iterations, train_scores, val_scores = model.train_with_callback(X_train, y_train, X_val, y_val, best_params)
 
         plot_path = plot_learning_curve(
             iterations=iterations,
@@ -240,6 +288,11 @@ class JLeagueAttendanceModel:
         y_test_pred = self.model.predict(X_test)
 
         return y_test_pred
+    
+    def predict_ensemble(self, X_test: pd.DataFrame) -> np.ndarray:
+        """全モデルの予測の平均を取る"""
+        predictions = [model.predict(X_test) for model in self.models]
+        return np.mean(predictions, axis=0)
         
     def create_submission(self, y_test_pred: ndarray):
         sample_submission_df = pd.read_csv(f"{BASE_DIR}/data/sample_submission.csv", header=None)
@@ -252,16 +305,12 @@ if __name__=="__main__":
     train_path = os.path.join(BASE_DIR, "function_data/train.csv")
     test_path = os.path.join(BASE_DIR, "function_data/test.csv")
 
-    j_league_attendance = JLeagueAttendance(data_dir)
-    train_feature, test_feature = j_league_attendance.create_feature(
-        train_path=train_path,
-        test_path=test_path
-    )
+
 
     run_name = "lgb_2024_06_29"
 
     features = [
-        "MatchDay", 
+        # "MatchDay", 
         "KickoffTime", 
         "HolidayFlag",
         "VenueLabel",
@@ -269,25 +318,33 @@ if __name__=="__main__":
         "StandardizedTemperature",
     ]
 
-    params = {
+    # ベースとなるパラメータを設定
+    base_params = {
         'objective': 'regression',
         'metric': 'rmse',
         'boosting_type': 'gbdt',
         "num_iterations": 10000,
         "bagging_fraction": 0.8,
         "bagging_freq": 5,
-        "lambda_l1": 0.1,
+        "lambda_l1": 0.01,  # 0.1から0.01に減少
         "lambda_l2": 0.1,
-        'feature_fraction': Trial.suggest_uniform('feature_fraction', 0.1, 1.0),
-        "num_leaves": optuna.distributions.IntUniformDistribution(10, 1000),
-        "learning_rate": optuna.distributions.LogUniformDistribution(1e-3, 0.1),
-        "n_estimators": optuna.distributions.IntUniformDistribution(100, 1000),
-
+        "min_child_samples": 20,  # この行を追加
+        "max_depth": -1,  # この行を追加。-1は無制限を意味します
     }
 
+    # Optunaで最適化するパラメータの範囲を設定
+    # optuna_params = {
+    #     "num_leaves": (10, 1000),
+    #     "learning_rate": (1e-4, 1e-1),  # 下限を1e-3から1e-4に変更
+    #     "n_estimators": (100, 1000),
+    # }
 
-    X_train = train_feature[features]
-    X_test = test_feature[features]
+    optuna_params = {}
+
+    train_feature, test_feature = load_feather(
+        feats=features
+    )
+
     y_train = pd.read_csv("data/train.csv")["attendance"]
 
     model = JLeagueAttendanceModel(
@@ -296,17 +353,30 @@ if __name__=="__main__":
         n_splits=5
     )
 
-    best_params = model.optimize_hyperparameters(
-        X=X_train,
-        y=y,
-        params=params
+    # best_params = model.optimize_hyperparameters(
+    #     X=train_feature,
+    #     y=y_train,
+    #     params=base_params,
+    #     optuna_params=optuna_params,
+    #     n_trials=5
+    # )
+
+    # # Train final model with best parameters
+    # model.train_final_model(train_feature, y_train, best_params)
+
+    
+
+    # シンプルなクロスバリデーション
+    model.train(
+        X=train_feature,
+        y=y_train,
+        params=base_params
     )
 
-    # Train final model with best parameters
-    model.train_final_model(X_train, y_train, best_params)
-
-    # Make predictions on test set
-    y_test_pred = model.predict(X_test)
+    y_test_pred = model.predict_ensemble(
+        models=model,
+        X_test=test_feature
+    )
 
     # Create submission file
     model.create_submission(y_test_pred)
