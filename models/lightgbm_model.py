@@ -10,8 +10,25 @@ class LightGBMModel(BaseModel):
         train_data = lgb.Dataset(X, label=y)
         self.model = lgb.train(
             self.params, 
-            train_set=train_data
+            train_set=train_data,
+            num_boost_round=10000,
+            callbacks=[lgb.early_stopping(100)]
         )
+
+    def train_with_callback(self, X_train, y_train, X_val, y_val):
+        train_data = lgb.Dataset(X_train, label=y_train)
+        val_data = lgb.Dataset(X_val, label=y_val)
+        callback, iterations, train_scores, val_scores = self.create_callback(X_train, y_train, X_val, y_val)
+
+        self.model = lgb.train(
+            self.params,
+            train_set=train_data,
+            num_boost_round=10000,
+            valid_sets=[train_data, val_data],
+            callbacks=[callback]
+        )
+
+        return iterations, train_scores, val_scores
     
     def predict(self, X):
         return self.model.predict(X)

@@ -13,6 +13,20 @@ class XGBoostModel(BaseModel):
             train_data
         )
 
+    def train_with_callback(self, X_train, y_train, X_val, y_val):
+        train_data = xgb.DMatrix(X_train, y_train)
+        val_data = xgb.DMatrix(X_val, y_val)
+        callback, iterations, train_scores, val_scores = self.create_callback(X_train, y_train, X_val, y_val)
+        
+        self.model = xgb.train(
+            self.params,
+            train_data,
+            evals=[(train_data, 'train'), (val_data, 'val')],
+            callbacks=[callback]
+        )
+        
+        return iterations, train_scores, val_scores
+
     def predict(self, X):
         return self.model.predict(xgb.DMatrix(X))
     

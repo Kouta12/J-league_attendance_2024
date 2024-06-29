@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple, Callable
 import numpy as np
 from sklearn.metrics import mean_squared_error
-import pandas as pd
 
 class BaseModel(ABC):
     @abstractmethod
@@ -21,18 +20,18 @@ class BaseModel(ABC):
     def load(self, path):
         pass
 
-    def create_callbacks(
+    def create_callback(
             self,
-            X_train: pd.DataFrame,
-            y_train: pd.DataFrame,
-            X_val: pd.DataFrame,
-            y_val: pd.DataFrame, 
+            X_train,
+            y_train,
+            X_val,
+            y_val, 
     ) -> Tuple[Callable, List[int], List[float], List[float]]:
         iterations = []
         train_scores = []
         val_scores = []
 
-        def callbacks(env):
+        def callback(env):
             iteration = env.iteration if hasattr(env, "iteration") else len(iteration)
 
             # トレーニングデータでの評価
@@ -46,4 +45,4 @@ class BaseModel(ABC):
             train_scores.append(train_rmse)
             val_scores.append(val_rsme)
 
-        return callable, iterations, train_scores, val_scores
+        return callback, iterations, train_scores, val_scores
