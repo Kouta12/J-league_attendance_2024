@@ -7,6 +7,7 @@ from pathlib import Path
 from contextlib import contextmanager
 
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 # ▼ペアレントディレクトリの定義
@@ -342,9 +343,11 @@ class StandardizedTemperature(FeatureBase):
         train_feature, test_feature = pd.DataFrame(), pd.DataFrame()
 
         sc = StandardScaler()
-        sc.fit(train_data["temperature"])
-        train_feature["StandardizedTemperature"] = sc.transform(train_data["temperature"])
-        test_feature["StandardizedTemperature"] = sc.transform(test_data["temperature"])
+        X_train = np.array(train_data["temperature"]).reshape(-1, 1)
+        X_test = np.array(test_data["temperature"]).reshape(-1, 1)
+        sc.fit(X_train)
+        train_feature["StandardizedTemperature"] = sc.transform(X_train).ravel()
+        test_feature["StandardizedTemperature"] = sc.transform(X_test).ravel()
 
         create_memo(
             col_name="StandardizedTemperature",

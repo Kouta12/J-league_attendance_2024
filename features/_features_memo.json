@@ -142,5 +142,10 @@
             "埼玉スタジアム2002": 118,
             "日産スタジアム": 119
         }
+    },
+    "Temperature": {
+        "description": "気温（加工なし）",
+        "data_type": "float64",
+        "possible_values": null
     }
 }

@@ -1,7 +1,14 @@
 import os
 import matplotlib.pyplot as plt
+from typing import List
 
-def plot_learning_curve(iterations, train_scores, val_scores, log_dir, run_name):
+def plot_learning_curve(
+        iterations: List[int], 
+        train_scores: List[float], 
+        val_scores: List[float], 
+        log_dir: str, 
+        run_name: str,
+) -> str:
     plt.figure(figsize=(10, 6))
     plt.plot(iterations, train_scores, label='Training RMSE')
     plt.plot(iterations, val_scores, label='Validation RMSE')
