@@ -165,7 +165,6 @@ class JLeagueAttendanceModel:
 
 
 
-
     def cross_validate(self, X: pd.DataFrame, y: pd.DataFrame, params: Dict[str, Any]) -> float:
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=777)
 
@@ -295,9 +294,9 @@ class JLeagueAttendanceModel:
         return np.mean(predictions, axis=0)
         
     def create_submission(self, y_test_pred: ndarray):
-        sample_submission_df = pd.read_csv(f"{BASE_DIR}/data/sample_submission.csv", header=None)
+        sample_submission_df = pd.read_csv(f"{BASE_DIR}/data/sample_submit.csv", header=None)
         sample_submission_df[1] = y_test_pred
-        file_path = os.path.join(BASE_DIR, "submit_data", f"{self.run_name}_submission.csv")
+        file_path = os.path.join(BASE_DIR, "submit_data", f"{self.run_name}_submit.csv")
         sample_submission_df.to_csv(file_path, index=False)
 
 if __name__=="__main__":
@@ -374,7 +373,6 @@ if __name__=="__main__":
     )
 
     y_test_pred = model.predict_ensemble(
-        models=model,
         X_test=test_feature
     )
 

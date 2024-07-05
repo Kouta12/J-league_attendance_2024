@@ -6,7 +6,7 @@ class XGBoostModel(BaseModel):
         self.params = params
         self.model = None
 
-    def trian(self, X, y):
+    def train(self, X, y):
         train_data = xgb.DMatrix(X, y)
         self.model = xgb.train(
             self.params,
