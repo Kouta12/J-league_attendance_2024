@@ -91,6 +91,8 @@ class FeatureBase:
         with timer(name=self.__class__.__name__):
             train_feature, test_feature = self.generate_feature(train_data, test_data)
             self.save_feature(train_feature, test_feature)
+            print(f"{self.__class__.__name__} - Train feature columns: {train_feature.columns}")
+            print(f"{self.__class__.__name__} - Train feature shape: {train_feature.shape}")
         return (train_data, test_data)
 
     def generate_feature(
@@ -356,6 +358,19 @@ class StandardizedTemperature(FeatureBase):
         )
         return (train_feature, test_feature)
     
+class MatchYear(FeatureBase):
+    def generate_feature(self, train_data: pd.DataFrame, test_data: pd.DataFrame):
+        train_feature, test_feature = pd.DataFrame(), pd.DataFrame()
+
+        train_feature["MatchYear"] = pd.to_datetime(train_data["match_date"]).dt.year
+        test_feature["MatchYear"] = pd.to_datetime(test_data["match_date"]).dt.year
+
+        create_memo(
+            col_name="MatchYear",
+            description="試合日（年）",
+            data_type="int"
+        )
+    
 
 """
 --------------------------------------------------------
@@ -369,54 +384,31 @@ class JLeagueAttendance:
     """
     コンペの特徴量を管理するクラス
     """
-    def __init__(
-            self,
-            data_dir,
-    ):
+    def __init__(self, data_dir):
         self.data_dir = data_dir
 
-    def create_and_concat_features(
-            self,
-            train_features: pd.DataFrame,
-            test_features: pd.DataFrame,
-            feature_classes: list[FeatureBase],
-            train_data: pd.DataFrame,
-            test_data: pd.DataFrame,
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def create_and_concat_features(self, train_data, test_data, feature_classes):
+        train_features = pd.DataFrame()
+        test_features = pd.DataFrame()
         
         for feature_class in feature_classes:
             feature_instance = feature_class(self.data_dir)
-            train_feature, test_feature = feature_instance.create_feature(
-                train_data, 
-                test_data
-            )
-            train_features = pd.concat(
-                [train_features, train_feature],
-                axis=1
-            )
-            test_features = pd.concat(
-                [test_features, test_feature],
-                axis=1
-            )
-        return (train_features, test_features)
-    
-    def create_feature(
-            self,
-            train_path: str,
-            test_path: str,
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+            train_feature, test_feature = feature_instance.create_feature(train_data, test_data)
+            train_features = pd.concat([train_features, train_feature], axis=1)
+            test_features = pd.concat([test_features, test_feature], axis=1)
+        
+        return train_features, test_features
+
+    def create_feature(self, train_path, test_path):
         train_data = pd.read_csv(train_path)
         test_data = pd.read_csv(test_path)
-
-        train_feature = pd.DataFrame()
-        test_feature = pd.DataFrame()
 
         """
         --------------------------------------------------------
         ▼                  特徴量の追加 ここから                   ▼
         --------------------------------------------------------
         """
-        # 個々の特徴量クラスのインスタンスを作成し、特徴量を生成
+
         feature_classes = [
             MatchDay, 
             KickoffTime, 
@@ -424,22 +416,23 @@ class JLeagueAttendance:
             VenueLabel,
             Temperature,
             StandardizedTemperature,
+            MatchYear
         ]
+
         """
         --------------------------------------------------------
         ▲                  特徴量の追加 ここまで                   ▲
         --------------------------------------------------------
         """
-        
+
         train_features, test_features = self.create_and_concat_features(
-            train_feature,
-            test_feature,
-            feature_classes,
-            train_data,
-            test_data,
+            train_data, 
+            test_data, 
+            feature_classes
         )
 
-        return (train_features, test_features)
+        return train_features, test_features
+    
 
     
 if __name__=="__main__":

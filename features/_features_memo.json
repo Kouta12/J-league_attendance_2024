@@ -147,5 +147,10 @@
         "description": "気温（加工なし）",
         "data_type": "float64",
         "possible_values": null
+    },
+    "StandardizedTemperature": {
+        "description": "標準化された気温",
+        "data_type": "float64",
+        "possible_values": null
     }
 }
