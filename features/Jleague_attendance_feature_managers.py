@@ -368,9 +368,104 @@ class MatchYear(FeatureBase):
         create_memo(
             col_name="MatchYear",
             description="試合日（年）",
-            data_type="int"
+            data_type="int64"
         )
+        return (train_feature, test_feature)
     
+class WeeksElapsed(FeatureBase):
+    def generate_feature(self, train_data: pd.DataFrame, test_data: pd.DataFrame):
+        train_feature, test_feature = pd.DataFrame(), pd.DataFrame()
+        train_data, test_data = load_feather(["MatchDay"])
+
+        train_feature['WeeksElapsed'] = (train_data['MatchDay'] - train_data['MatchDay'].dt.to_period('Y').dt.start_time).dt.days // 7
+        test_feature["WeeksElapsed"] = (test_data["MatchDay"] - train_data['MatchDay'].dt.to_period('Y').dt.start_time).dt.days // 7
+
+        create_memo(
+            col_name="WeeksElapsed",
+            description="年度の開始からの経過週数",
+            data_type="int64"
+        )
+        return (train_feature, test_feature)
+    
+class HomeTeamRankInTheYear(FeatureBase):
+    def generate_feature(self, train_data: pd.DataFrame, test_data: pd.DataFrame):
+        train_feature, test_feature = pd.DataFrame(), pd.DataFrame()
+
+        with open(f"{BASE_DIR}/function_data/rank_table.json", "r", encoding="utf-8") as f:
+            d = json.load(f)
+
+        train_data["Year"] = pd.to_datetime(train_data["match_date"]).dt.year
+        years = train_data["Year"].unique()
+
+        for year in years:
+            temp = train_data.iloc[train_data[train_data["Year"] == year].index]
+            temp["HomeTeamRankInTheYear"] = temp["home_team"].map(d[str(year)]).astype("int64")
+            
+            train_feature = pd.concat([train_feature, temp["HomeTeamRankInTheYear"]], axis=0)
+
+        train_feature = train_feature.rename(columns={0: "HomeTeamRankInTheYear"})
+
+        test_data["Year"] = pd.to_datetime(test_data["match_date"]).dt.year
+        years = test_data["Year"].unique()
+
+        for year in years:
+            temp = test_data.iloc[test_data[test_data["Year"] == year].index]
+            temp["HomeTeamRankInTheYear"] = temp["home_team"].map(d[str(year)]).astype("int64")
+            
+            test_feature = pd.concat([test_feature, temp["HomeTeamRankInTheYear"]], axis=0)
+
+        test_feature = test_feature.rename(columns={0: "HomeTeamRankInTheYear"})
+
+        create_memo(
+            col_name="HomeTeamRankInTheYear",
+            description="その年のチームの順位",
+            data_type="category"
+        )
+        return (train_feature, test_feature)
+    
+class HomeTeamRankInTheLastYear(FeatureBase):
+    def generate_feature(self, train_data: pd.DataFrame, test_data: pd.DataFrame):
+        train_feature, test_feature = pd.DataFrame(), pd.DataFrame()
+
+        with open(f"{BASE_DIR}/function_data/rank_table.json", "r", encoding="utf-8") as f:
+            d = json.load(f)
+
+        train_data["Year"] = pd.to_datetime(train_data["match_date"]).dt.year
+        years = train_data["Year"].unique()
+
+        for year in years:
+            last_year = year - 1
+            if last_year == 2005:
+                last_year = year
+            temp = train_data.iloc[train_data[train_data["Year"] == year].index]
+            temp["HomeTeamRankInTheLastYear"] = temp["home_team"].map(d[str(last_year)], na_action=None).fillna(0).astype("int64")
+            
+            train_feature = pd.concat([train_feature, temp["HomeTeamRankInTheLastYear"]], axis=0)
+
+        train_feature = train_feature.rename(columns={0: "HomeTeamRankInTheLastYear"})
+
+        test_data["Year"] = pd.to_datetime(test_data["match_date"]).dt.year
+        years = test_data["Year"].unique()
+
+        for year in years:
+            last_year = year - 1
+            temp = test_data.iloc[test_data[test_data["Year"] == year].index]
+            temp["HomeTeamRankInTheLastYear"] = temp["home_team"].map(d[str(last_year)], na_action=None).fillna(0).astype("int64")
+            
+            test_feature = pd.concat([test_feature, temp["HomeTeamRankInTheLastYear"]], axis=0)
+
+        test_feature = test_feature.rename(columns={0: "HomeTeamRankInTheLastYear"})
+
+        create_memo(
+            col_name="HomeTeamRankInTheLastYear",
+            description="昨年の順位（欠損値は0で補完）",
+            data_type="int64",
+        )
+
+        return (train_feature, test_feature)
+
+
+
 
 """
 --------------------------------------------------------
@@ -416,7 +511,10 @@ class JLeagueAttendance:
             VenueLabel,
             Temperature,
             StandardizedTemperature,
-            MatchYear
+            MatchYear,
+            WeeksElapsed,
+            HomeTeamRankInTheYear,
+            HomeTeamRankInTheLastYear,
         ]
 
         """

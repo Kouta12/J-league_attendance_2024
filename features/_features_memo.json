@@ -152,5 +152,25 @@
         "description": "標準化された気温",
         "data_type": "float64",
         "possible_values": null
+    },
+    "MatchYear": {
+        "description": "試合日（年）",
+        "data_type": "int64",
+        "possible_values": null
+    },
+    "WeeksElapsed": {
+        "description": "年度の開始からの経過週数",
+        "data_type": "int64",
+        "possible_values": null
+    },
+    "HomeTeamRankInTheYear": {
+        "description": "その年のチームの順位",
+        "data_type": "category",
+        "possible_values": null
+    },
+    "HomeTeamRankInTheLastYear": {
+        "description": "昨年の順位（欠損値は0で補完）",
+        "data_type": "int64",
+        "possible_values": null
     }
 }
