@@ -383,7 +383,7 @@ class WeeksElapsed(FeatureBase):
         create_memo(
             col_name="WeeksElapsed",
             description="年度の開始からの経過週数",
-            data_type="int64"
+            data_type="int64",
         )
         return (train_feature, test_feature)
     
@@ -419,7 +419,8 @@ class HomeTeamRankInTheYear(FeatureBase):
         create_memo(
             col_name="HomeTeamRankInTheYear",
             description="その年のチームの順位",
-            data_type="category"
+            data_type="category",
+            possible_values=d
         )
         return (train_feature, test_feature)
     
@@ -460,9 +461,24 @@ class HomeTeamRankInTheLastYear(FeatureBase):
             col_name="HomeTeamRankInTheLastYear",
             description="昨年の順位（欠損値は0で補完）",
             data_type="int64",
+            possible_values=d,
         )
 
         return (train_feature, test_feature)
+    
+class WheatherDummies(FeatureBase):
+    def generate_feature(self, train_data: pd.DataFrame, test_data: pd.DataFrame):
+        # train_feature, test_feature = pd.DataFrame(), pd.DataFrame()
+        train_feature = pd.get_dummies(train_data["weather"])
+        test_feature = pd.get_dummies(test_data["weather"])
+
+        create_memo(
+            col_name="WheatherDummies",
+            description="カラム:weatherをダミー変数化",
+            data_type="int64"
+        )
+        return (train_feature, test_feature)
+
 
 
 
@@ -515,6 +531,7 @@ class JLeagueAttendance:
             WeeksElapsed,
             HomeTeamRankInTheYear,
             HomeTeamRankInTheLastYear,
+            WheatherDummies,
         ]
 
         """
